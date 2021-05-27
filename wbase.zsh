@@ -309,24 +309,30 @@ bindkey '^a' beginning-of-line
 bindkey '^e' end-of-line
 
 # alt+q to push current line and fetch again on next line
-bindkey '\eq' push-line
+# bindkey '\eq' push-line
 
 # show man page of current command with alt+h
-bindkey '\eh' run-help
+# bindkey '\eh' run-help
 
 # ctrl+left, ctrl+right to wo to next word
 # alt+left, alt+right to wo to next word
-bindkey '^[[1;5D' backward-word
-bindkey '^[[1;5C' forward-word
-bindkey '^[[1;3D' backward-word
-bindkey '^[[1;3C' forward-word
+# bindkey '\eOc' forward-word
+# bindkey '\eOd' backward-word
+# bindkey '\e[1;5C' forward-word
+# bindkey '\e[1;5D' backward-word
+# bindkey '\e\e[C' forward-word
+# bindkey '\e\e[D' backward-word
+# bindkey '^[[1;3C' forward-word
+# bindkey '^[[1;3D' backward-word
 
 # allow backspace, alt+backspace, ctrl+backspace, ctrl+w for char and word deletion
 # These escape sequences are different depending on your terminal
-bindkey '^?' backward-delete-char
-bindkey '^[[3~' delete-char
-bindkey '\e^?' slash-backward-kill-word
-bindkey '^H' slash-backward-kill-word
+# bindkey '^?' backward-delete-char
+# bindkey '^[[3~' delete-char
+# bindkey '\e^?' slash-backward-kill-word
+# bindkey '^H' slash-backward-kill-word
+
+# Default to selecting word vim-style (smaller blocks), I'm used to bigger
 bindkey '^w' slash-backward-kill-word
 
 # Shift-Tab to go back in completion menu
@@ -334,11 +340,11 @@ zmodload -i zsh/complist  # Needed for keybindings in menucomplete mode, and com
 bindkey -M menuselect '^[[Z' reverse-menu-complete
 
 # Gets the nth argument from the last command by pressing Alt+1, Alt+2, ... Alt+5
-bindkey -s '\e1' "!:0-0 \t"
-bindkey -s '\e2' "!:1-1 \t"
-bindkey -s '\e3' "!:2-2 \t"
-bindkey -s '\e4' "!:3-3 \t"
-bindkey -s '\e5' "!:4-4 \t"
+# bindkey -s '\e1' "!:0-0 \t"
+# bindkey -s '\e2' "!:1-1 \t"
+# bindkey -s '\e3' "!:2-2 \t"
+# bindkey -s '\e4' "!:3-3 \t"
+# bindkey -s '\e5' "!:4-4 \t"
 
 bindkey '^r' history-incremental-search-backward
 bindkey '^s' history-incremental-search-forward
@@ -346,20 +352,20 @@ bindkey '^s' history-incremental-search-forward
 
 #{{{ Useful functions
 # prevent man from displaying lines wider than 120 characters
-function man(){
-    MANWIDTH=120
-    if (( MANWIDTH > COLUMNS )); then
-        MANWIDTH=$COLUMNS
-    fi
-    MANWIDTH=$MANWIDTH /usr/bin/man $*
-    unset MANWIDTH
-}
+# function man(){
+#     MANWIDTH=120
+#     if (( MANWIDTH > COLUMNS )); then
+#         MANWIDTH=$COLUMNS
+#     fi
+#     MANWIDTH=$MANWIDTH /usr/bin/man $*
+#     unset MANWIDTH
+# }
 
 # cd to directory and list files
-function cl() {
-    emulate -L zsh
-    cd $1 && ls -a
-}
+# function cl() {
+#     emulate -L zsh
+#     cd $1 && ls -a
+# }
 
 # Smart cd function. cd to parent dir if file is given.
 function cd() {
@@ -373,37 +379,197 @@ function cd() {
 }
 
 # Create Directory and cd to it
-function mkcd() {
-    if (( ARGC != 1 )); then
-        printf 'usage: mkcd <new-directory>\n'
-        return 1;
-    fi
-    if [[ ! -d "$1" ]]; then
-        command mkdir -p "$1"
-    else
-        printf '`%s'\'' already exists: cd-ing.\n' "$1"
-    fi
-    builtin cd "$1"
-}
+# function mkcd() {
+#     if (( ARGC != 1 )); then
+#         printf 'usage: mkcd <new-directory>\n'
+#         return 1;
+#     fi
+#     if [[ ! -d "$1" ]]; then
+#         command mkdir -p "$1"
+#     else
+#         printf '`%s'\'' already exists: cd-ing.\n' "$1"
+#     fi
+#     builtin cd "$1"
+# }
 
 # Create temporary directory and cd to it
-function cdt() {
-    builtin cd "$(mktemp -d)"
-    builtin pwd
-}
+# function cdt() {
+#     builtin cd "$(mktemp -d)"
+#     builtin pwd
+# }
 
 # A small wrapper for qrencode (https://fukuchi.org/works/qrencode/).
 # Wraps the output of qrencode to have high black and white contrast.
 # Usage:
 # - With pipes: xclip -o | mkqrcode
 # - With arguments: mkqrcode "hello world"
-function mkqrcode() {
-    data="$@"
-    [[ -z "$data" ]] && IFS='' read -rd '' data
-    echo "\e[48;5;231m\e[38;5;232m"
-    qrencode -t utf8i -o - "$data"
-    echo "\e[0m"
-}
+# function mkqrcode() {
+#     data="$@"
+#     [[ -z "$data" ]] && IFS='' read -rd '' data
+#     echo "\e[48;5;231m\e[38;5;232m"
+#     qrencode -t utf8i -o - "$data"
+#     echo "\e[0m"
+# }
 #}}}
 
 # vim:foldmethod=marker
+
+# Usage: simple-extract <file>
+# Using option -d deletes the original archive file.
+#f5# Smart archive extractor
+function simple-extract () {
+    emulate -L zsh
+    setopt extended_glob noclobber
+    local ARCHIVE DELETE_ORIGINAL DECOMP_CMD USES_STDIN USES_STDOUT GZTARGET WGET_CMD
+    local RC=0
+    zparseopts -D -E "d=DELETE_ORIGINAL"
+    for ARCHIVE in "${@}"; do
+        case $ARCHIVE in
+            *(tar.bz2|tbz2|tbz))
+                DECOMP_CMD="tar -xvjf -"
+                USES_STDIN=true
+                USES_STDOUT=false
+                ;;
+            *(tar.gz|tgz))
+                DECOMP_CMD="tar -xvzf -"
+                USES_STDIN=true
+                USES_STDOUT=false
+                ;;
+            *(tar.xz|txz|tar.lzma))
+                DECOMP_CMD="tar -xvJf -"
+                USES_STDIN=true
+                USES_STDOUT=false
+                ;;
+            *tar.zst)
+                DECOMP_CMD="tar --zstd -xvf -"
+                USES_STDIN=true
+                USES_STDOUT=false
+                ;;
+            *tar.lrz)
+                DECOMP_CMD="lrzuntar"
+                USES_STDIN=false
+                USES_STDOUT=false
+                ;;
+            *tar)
+                DECOMP_CMD="tar -xvf -"
+                USES_STDIN=true
+                USES_STDOUT=false
+                ;;
+            *rar)
+                DECOMP_CMD="unrar x"
+                USES_STDIN=false
+                USES_STDOUT=false
+                ;;
+            *lzh)
+                DECOMP_CMD="lha x"
+                USES_STDIN=false
+                USES_STDOUT=false
+                ;;
+            *7z)
+                DECOMP_CMD="7z x"
+                USES_STDIN=false
+                USES_STDOUT=false
+                ;;
+            *(zip|jar))
+                DECOMP_CMD="unzip"
+                USES_STDIN=false
+                USES_STDOUT=false
+                ;;
+            *deb)
+                DECOMP_CMD="ar -x"
+                USES_STDIN=false
+                USES_STDOUT=false
+                ;;
+            *bz2)
+                DECOMP_CMD="bzip2 -d -c -"
+                USES_STDIN=true
+                USES_STDOUT=true
+                ;;
+            *(gz|Z))
+                DECOMP_CMD="gzip -d -c -"
+                USES_STDIN=true
+                USES_STDOUT=true
+                ;;
+            *(xz|lzma))
+                DECOMP_CMD="xz -d -c -"
+                USES_STDIN=true
+                USES_STDOUT=true
+                ;;
+            *zst)
+                DECOMP_CMD="zstd -d -c -"
+                USES_STDIN=true
+                USES_STDOUT=true
+                ;;
+            *lrz)
+                DECOMP_CMD="lrunzip -"
+                USES_STDIN=true
+                USES_STDOUT=true
+                ;;
+            *)
+                print "ERROR: '$ARCHIVE' has unrecognized archive type." >&2
+                RC=$((RC+1))
+                continue
+                ;;
+        esac
+
+        if ! check_com ${DECOMP_CMD[(w)1]}; then
+            echo "ERROR: ${DECOMP_CMD[(w)1]} not installed." >&2
+            RC=$((RC+2))
+            continue
+        fi
+
+        GZTARGET="${ARCHIVE:t:r}"
+        if [[ -f $ARCHIVE ]] ; then
+
+            print "Extracting '$ARCHIVE' ..."
+            if $USES_STDIN; then
+                if $USES_STDOUT; then
+                    ${=DECOMP_CMD} < "$ARCHIVE" > $GZTARGET
+                else
+                    ${=DECOMP_CMD} < "$ARCHIVE"
+                fi
+            else
+                if $USES_STDOUT; then
+                    ${=DECOMP_CMD} "$ARCHIVE" > $GZTARGET
+                else
+                    ${=DECOMP_CMD} "$ARCHIVE"
+                fi
+            fi
+            [[ $? -eq 0 && -n "$DELETE_ORIGINAL" ]] && rm -f "$ARCHIVE"
+
+        elif [[ "$ARCHIVE" == (#s)(https|http|ftp)://* ]] ; then
+            if check_com curl; then
+                WGET_CMD="curl -L -s -o -"
+            elif check_com wget; then
+                WGET_CMD="wget -q -O -"
+            elif check_com fetch; then
+                WGET_CMD="fetch -q -o -"
+            else
+                print "ERROR: neither wget, curl nor fetch is installed" >&2
+                RC=$((RC+4))
+                continue
+            fi
+            print "Downloading and Extracting '$ARCHIVE' ..."
+            if $USES_STDIN; then
+                if $USES_STDOUT; then
+                    ${=WGET_CMD} "$ARCHIVE" | ${=DECOMP_CMD} > $GZTARGET
+                    RC=$((RC+$?))
+                else
+                    ${=WGET_CMD} "$ARCHIVE" | ${=DECOMP_CMD}
+                    RC=$((RC+$?))
+                fi
+            else
+                if $USES_STDOUT; then
+                    ${=DECOMP_CMD} =(${=WGET_CMD} "$ARCHIVE") > $GZTARGET
+                else
+                    ${=DECOMP_CMD} =(${=WGET_CMD} "$ARCHIVE")
+                fi
+            fi
+
+        else
+            print "ERROR: '$ARCHIVE' is neither a valid file nor a supported URI." >&2
+            RC=$((RC+8))
+        fi
+    done
+    return $RC
+}
