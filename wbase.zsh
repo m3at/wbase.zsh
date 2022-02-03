@@ -308,30 +308,6 @@ esac
 bindkey '^a' beginning-of-line
 bindkey '^e' end-of-line
 
-# alt+q to push current line and fetch again on next line
-# bindkey '\eq' push-line
-
-# show man page of current command with alt+h
-# bindkey '\eh' run-help
-
-# ctrl+left, ctrl+right to wo to next word
-# alt+left, alt+right to wo to next word
-# bindkey '\eOc' forward-word
-# bindkey '\eOd' backward-word
-# bindkey '\e[1;5C' forward-word
-# bindkey '\e[1;5D' backward-word
-# bindkey '\e\e[C' forward-word
-# bindkey '\e\e[D' backward-word
-# bindkey '^[[1;3C' forward-word
-# bindkey '^[[1;3D' backward-word
-
-# allow backspace, alt+backspace, ctrl+backspace, ctrl+w for char and word deletion
-# These escape sequences are different depending on your terminal
-# bindkey '^?' backward-delete-char
-# bindkey '^[[3~' delete-char
-# bindkey '\e^?' slash-backward-kill-word
-# bindkey '^H' slash-backward-kill-word
-
 # Default to selecting word vim-style (smaller blocks), I'm used to bigger
 bindkey '^w' slash-backward-kill-word
 
@@ -339,33 +315,11 @@ bindkey '^w' slash-backward-kill-word
 zmodload -i zsh/complist  # Needed for keybindings in menucomplete mode, and completion styling
 bindkey -M menuselect '^[[Z' reverse-menu-complete
 
-# Gets the nth argument from the last command by pressing Alt+1, Alt+2, ... Alt+5
-# bindkey -s '\e1' "!:0-0 \t"
-# bindkey -s '\e2' "!:1-1 \t"
-# bindkey -s '\e3' "!:2-2 \t"
-# bindkey -s '\e4' "!:3-3 \t"
-# bindkey -s '\e5' "!:4-4 \t"
-
 bindkey '^r' history-incremental-search-backward
 bindkey '^s' history-incremental-search-forward
 #}}}
 
 #{{{ Useful functions
-# prevent man from displaying lines wider than 120 characters
-# function man(){
-#     MANWIDTH=120
-#     if (( MANWIDTH > COLUMNS )); then
-#         MANWIDTH=$COLUMNS
-#     fi
-#     MANWIDTH=$MANWIDTH /usr/bin/man $*
-#     unset MANWIDTH
-# }
-
-# cd to directory and list files
-# function cl() {
-#     emulate -L zsh
-#     cd $1 && ls -a
-# }
 
 # Smart cd function. cd to parent dir if file is given.
 function cd() {
@@ -377,42 +331,6 @@ function cd() {
         builtin cd "$@"
     fi
 }
-
-# Create Directory and cd to it
-# function mkcd() {
-#     if (( ARGC != 1 )); then
-#         printf 'usage: mkcd <new-directory>\n'
-#         return 1;
-#     fi
-#     if [[ ! -d "$1" ]]; then
-#         command mkdir -p "$1"
-#     else
-#         printf '`%s'\'' already exists: cd-ing.\n' "$1"
-#     fi
-#     builtin cd "$1"
-# }
-
-# Create temporary directory and cd to it
-# function cdt() {
-#     builtin cd "$(mktemp -d)"
-#     builtin pwd
-# }
-
-# A small wrapper for qrencode (https://fukuchi.org/works/qrencode/).
-# Wraps the output of qrencode to have high black and white contrast.
-# Usage:
-# - With pipes: xclip -o | mkqrcode
-# - With arguments: mkqrcode "hello world"
-# function mkqrcode() {
-#     data="$@"
-#     [[ -z "$data" ]] && IFS='' read -rd '' data
-#     echo "\e[48;5;231m\e[38;5;232m"
-#     qrencode -t utf8i -o - "$data"
-#     echo "\e[0m"
-# }
-#}}}
-
-# vim:foldmethod=marker
 
 # Extra functions taken from grml
 
@@ -620,3 +538,5 @@ function simple-extract () {
     done
     return $RC
 }
+
+#}}}
